@@ -35,7 +35,7 @@ func main() {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString("time" + delimiter + "voltage" + delimiter + "current\n")
+	_, err = f.WriteString("time" + delimiter + "voltage" + delimiter + "current" + delimiter + "capacity\n")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -79,11 +79,17 @@ func main() {
 			continue
 		}
 
+		capacity, err := dl24.GetData(atorch.GetCharge)
+		if err != nil {
+			continue
+		}
+
 		if !ison.(bool) {
+			fmt.Printf("Capacity %f\n", capacity)
 			return
 		}
 
-		str := fmt.Sprintf("%s%s%f%s%f\n", time.Now().Format("2006-01-02 15:04:05"), delimiter, voltage, delimiter, current)
+		str := fmt.Sprintf("%s%s%f%s%f%s%f\n", time.Now().Format("2006-01-02 15:04:05"), delimiter, voltage, delimiter, current, delimiter, capacity)
 
 		_, err = f.WriteString(str)
 		if err != nil {
