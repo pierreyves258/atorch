@@ -1,4 +1,4 @@
-module github.com/pierreyves258/dl24
+module github.com/pierreyves258/atorch
 
 go 1.23.3
 

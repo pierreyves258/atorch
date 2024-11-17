@@ -7,18 +7,22 @@ import (
 	"os"
 	"time"
 
-	"github.com/pierreyves258/dl24/px100"
+	"github.com/pierreyves258/atorch"
 )
 
 func main() {
 	var tty, file, delimiter string
+	var current, voltage float64
 
 	flag.StringVar(&tty, "p", "/dev/ttyUSB0", "Serial port")
 	flag.StringVar(&file, "o", "/dev/stdout", "CSV file")
 	flag.StringVar(&delimiter, "d", ",", "CSV delimiter")
+	flag.Float64Var(&voltage, "v", 5.5, "Voltage cut off")
+	flag.Float64Var(&current, "c", 1.65, "Load current")
+
 	flag.Parse()
 
-	dl24, err := px100.NewPX100(tty)
+	dl24, err := atorch.NewPX100(tty)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,40 +41,40 @@ func main() {
 		return
 	}
 
-	err = dl24.SetData(px100.Reset, nil)
+	err = dl24.SetData(atorch.Reset, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(px100.SetCurrent, 1.65)
+	err = dl24.SetData(atorch.SetCurrent, current)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(px100.SetCutoff, 5.5)
+	err = dl24.SetData(atorch.SetCutoff, voltage)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(px100.SetOutput, true)
+	err = dl24.SetData(atorch.SetOutput, true)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	for {
-		voltage, err := dl24.GetData(px100.GetVoltage)
+		voltage, err := dl24.GetData(atorch.GetVoltage)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		current, err := dl24.GetData(px100.GetCurrent)
+		current, err := dl24.GetData(atorch.GetCurrent)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		ison, err := dl24.GetData(px100.GetIsOn)
+		ison, err := dl24.GetData(atorch.GetIsOn)
 		if err != nil {
 			continue
 		}
