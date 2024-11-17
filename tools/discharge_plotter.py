@@ -13,6 +13,7 @@ def main():
     argparser = argparse.ArgumentParser()
     argparser.set_defaults(cmd=lambda: None, cmd_args=lambda x: [])
     argparser.add_argument('path', type=str, metavar="PATH")
+    argparser.add_argument('output', type=str, metavar="OUTPUT")
 
     args = argparser.parse_args()
 
@@ -51,5 +52,5 @@ def main():
     ax1_voltage.set_ylim([min_voltage * v_scale_mult, max_voltage * v_scale_mult])
     ax1_voltage.set_ylabel("Voltage", color='green')
 
-    plt.show()
+    plt.savefig(args.output)
 main()
