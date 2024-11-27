@@ -41,22 +41,22 @@ func main() {
 		return
 	}
 
-	err = dl24.SetData(atorch.Reset, nil)
+	err = dl24.SetData(atorch.Reset, nil, true)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(atorch.SetCurrent, current)
+	err = dl24.SetData(atorch.SetCurrent, current, false)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(atorch.SetCutoff, voltage)
+	err = dl24.SetData(atorch.SetCutoff, voltage, false)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = dl24.SetData(atorch.SetOutput, true)
+	err = dl24.SetData(atorch.SetOutput, true, false)
 	if err != nil {
 		log.Fatalln(err)
 	}

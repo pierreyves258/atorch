@@ -4,12 +4,14 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"go.bug.st/serial"
 )
 
 type PX100 struct {
+	sync.Mutex
 	port serial.Port
 }
 
@@ -33,6 +35,14 @@ const (
 	SetMaxTime
 	Reset
 )
+
+var setToGet = map[byte]byte{
+	SetOutput:  GetIsOn,
+	SetCurrent: GetCurrentLimit,
+	SetCutoff:  GetVoltageLimit,
+	SetMaxTime: GetTime,
+	Reset:      GetCharge,
+}
 
 func NewPX100(tty string) (*PX100, error) {
 	mode := &serial.Mode{
@@ -96,6 +106,9 @@ func (px *PX100) readReply() ([]byte, error) {
 
 	timeout := time.After(time.Second)
 
+	px.Lock()
+	defer px.Unlock()
+
 	for {
 		n, err := px.port.Read(buff)
 		if err != nil {
@@ -132,6 +145,9 @@ func (px *PX100) sendCommand(command byte, payload []byte) error {
 		return fmt.Errorf("invalid payload len")
 	}
 
+	px.Lock()
+	defer px.Unlock()
+
 	px.port.ResetInputBuffer() // Flush read buffer
 	n, err := px.port.Write([]byte{0xb1, 0xb2, command, payload[0], payload[1], 0xb6})
 	if err != nil {
@@ -145,14 +161,14 @@ func (px *PX100) sendCommand(command byte, payload []byte) error {
 	return nil
 }
 
-func (px *PX100) SetData(command byte, value interface{}) error {
+func (px *PX100) SetData(command byte, value interface{}, ensure bool) error {
 	payload := make([]byte, 2)
 
 	switch tVal := value.(type) {
 	case float64:
 		i, f := math.Modf(tVal)
 		payload[0] = byte(i)
-		payload[1] = byte(f * 100)
+		payload[1] = byte(float32(f) * 100)
 	case bool:
 		if tVal {
 			payload[0] = 1
@@ -166,6 +182,21 @@ func (px *PX100) SetData(command byte, value interface{}) error {
 	err := px.sendCommand(command, payload)
 	if err != nil {
 		return err
+	}
+
+	if ensure {
+		res, err := px.GetData(setToGet[command])
+		if err != nil {
+			return err
+		}
+		if command == Reset {
+			value = .0 // After a reset capacity must be 0
+		}
+		// fmt.Printf("%d %v | %d %v\n", command, value, setToGet[command], res)
+		if res != value {
+			fmt.Printf("%v != %v, retry\n", value, res)
+			px.SetData(command, value, ensure) // retry
+		}
 	}
 
 	return nil

@@ -1,12 +1,9 @@
 import argparse
 import csv
-import datetime
 import math
 
 from matplotlib import ticker
-from matplotlib.pyplot import figure
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoMinorLocator
 
 
 def main():
@@ -23,9 +20,8 @@ def main():
     capacity_series = []
     voltage_series = []
 
-    min_voltage = 500
+    min_voltage = 100 # high value to override
     max_voltage = 0
-    min_capacity = 0
 
     entries_i = iter(wr)
     next(entries_i)
@@ -38,8 +34,6 @@ def main():
         min_voltage = math.floor(min(min_voltage, voltage))
         max_voltage = math.ceil(max(max_voltage, voltage))
 
-    max_capacity = capacity_series[-1]
-    v_scale_mult = 1
     fig, (ax1_voltage) = plt.subplots(1, 1)
     fig.set_size_inches(8.5, 4)
 
@@ -48,8 +42,8 @@ def main():
 
     # Voltage
     ax1_voltage.plot(capacity_series, voltage_series, color='green')
-    ax1_voltage.yaxis.set_major_formatter(ticker.FormatStrFormatter('%g V'))
-    ax1_voltage.set_ylim([min_voltage * v_scale_mult, max_voltage * v_scale_mult])
+    ax1_voltage.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f V'))
+    ax1_voltage.set_ylim([min_voltage, max_voltage])
     ax1_voltage.set_ylabel("Voltage", color='green')
 
     plt.savefig(args.output)
